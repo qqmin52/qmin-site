@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Qmin 文档版式 — 复用 style.css 的变量与基础样式
+   ========================================================================== */
+
+/* 文档页没有左侧书脊栏，去掉首页的竖栏留白 */
+body { padding-left: 0; }
+
+.doc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px var(--gut);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.doc-top__nav { display: flex; align-items: center; gap: 20px; font-size: 13.5px; }
+.doc-top__nav a { color: var(--ink-2); }
+.doc-top__nav a:hover { color: var(--accent); }
+.doc-top__nav .on { color: var(--ink); border-bottom: 1px solid var(--ink); }
+
+.doc-wrap {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px var(--gut) 88px;
+}
+
+/* 侧栏 */
+.doc-side { position: sticky; top: 24px; align-self: start; }
+.doc-side__label {
+  margin: 0 0 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.doc-side__group {
+  margin: 22px 0 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.doc-side a {
+  display: block;
+  padding: 5px 0 5px 12px;
+  border-left: 2px solid transparent;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  transition: color .18s, border-color .18s;
+}
+.doc-side a:hover { color: var(--ink); border-color: var(--rule-strong); }
+.doc-side a.is-current { color: var(--accent); border-color: var(--accent); }
+
+/* 正文 */
+.doc-main { width: 100%; max-width: 780px; min-width: 0; }
+.doc-kicker {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.doc-main h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  line-height: 1.12;
+  letter-spacing: -.03em;
+  font-weight: 800;
+}
+.doc-lede {
+  margin: 0 0 34px;
+  font-size: 16.5px;
+  line-height: 1.85;
+  color: var(--ink-2);
+  max-width: 40em;
+}
+.doc-main h2 {
+  margin: 54px 0 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 1.42rem;
+  letter-spacing: -.02em;
+  scroll-margin-top: 24px;
+}
+.doc-main h2:first-of-type { margin-top: 8px; }
+.doc-main h3 { margin: 26px 0 8px; font-size: 1.05rem; letter-spacing: -.01em; }
+.doc-main p { margin: 0 0 14px; color: var(--ink-2); font-size: 15.5px; line-height: 1.85; }
+.doc-main ul, .doc-main ol {
+  margin: 0 0 16px;
+  padding-left: 1.25em;
+  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.85;
+}
+.doc-main li { margin-bottom: 6px; }
+.doc-main li::marker { color: var(--accent); }
+
+.doc-main code {
+  padding: 1px 5px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  font-size: .85em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.doc-main pre.code { margin: 14px 0 20px; }
+.doc-main pre code { border: 0; background: none; padding: 0; }
+.doc-main pre .ln { color: var(--muted); user-select: none; margin-right: 1em; }
+
+.doc-main a { border-bottom: 1px solid var(--rule-strong); }
+.doc-main a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* 表格 */
+.doc-table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; font-size: 14px; }
+.doc-table th {
+  padding: 9px 14px 9px 0;
+  border-bottom: 1px solid var(--rule-strong);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.doc-table td {
+  padding: 10px 14px 10px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.doc-table code { font-size: .82em; }
+
+/* 提示块 */
+.note {
+  margin: 20px 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.note strong { color: var(--ink); }
+.note code { color: var(--ink-2); }
+
+/* 页内跳转卡片 */
+.doc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; border: 1px solid var(--rule-strong); margin: 26px 0 8px; background: var(--rule); }
+.doc-cards a { display: block; padding: 18px 20px; background: var(--paper); border: 0; }
+.doc-cards a:hover { background: var(--paper-2); }
+.doc-cards span { display: block; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.doc-cards em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); }
+
+/* 页脚 */
+.doc-foot {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px var(--gut) 56px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+.doc-foot a { border-bottom: 1px solid var(--rule); }
+.doc-foot a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* 上下页 */
+.doc-pager { display: flex; justify-content: space-between; gap: 16px; margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13.5px; }
+.doc-pager a { border: 0; color: var(--ink-2); }
+.doc-pager a:hover { color: var(--accent); }
+.doc-pager .next { margin-left: auto; text-align: right; }
+
+@media (max-width: 900px) {
+  .doc-wrap { grid-template-columns: minmax(0, 1fr); padding-top: 24px; }
+  .doc-side {
+    position: static;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .doc-side nav { display: flex; gap: 16px; }
+  .doc-side__label, .doc-side__group { display: none; }
+  .doc-side a { white-space: nowrap; border-left: 0; border-bottom: 2px solid transparent; padding: 4px 2px; }
+  .doc-side a.is-current { border-color: var(--accent); }
+  .doc-cards { grid-template-columns: 1fr; }
+  .doc-top__nav { gap: 14px; font-size: 12.5px; }
+}
+
+@media (max-width: 520px) {
+  .doc-main h1 { font-size: 1.9rem; }
+  .doc-table { font-size: 13px; }
+  .doc-table th, .doc-table td { padding-right: 8px; }
+}
+
+@media print {
+  .doc-top, .doc-side, .doc-pager, .doc-foot { display: none; }
+  .doc-wrap { display: block; padding: 0; }
+}

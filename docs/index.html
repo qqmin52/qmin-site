@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文档 — Qmin 简Q</title>
+<meta name="description" content="Qmin 文档：安装、运行、命令、配置与面板。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/docs.css">
+</head>
+<body>
+
+<header class="doc-top">
+  <a class="brand" href="../index.html"><span class="brand__name">Qmin</span><span class="brand__cn">简Q</span></a>
+  <nav class="doc-top__nav" aria-label="文档导航">
+    <a class="on" href="index.html">文档</a>
+    <a href="plugins.html">插件</a>
+    <a href="architecture.html">架构</a>
+    <a href="../index.html">首页</a>
+    <a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<div class="doc-wrap">
+  <aside class="doc-side" aria-label="文档目录">
+    <p class="doc-side__label">文档</p>
+    <nav>
+      <div class="doc-side__group">开始</div>
+      <a class="is-current" href="index.html#install">安装与运行</a>
+      <a href="index.html#run">第一次运行</a>
+      <a href="index.html#cli">命令</a>
+      <a href="index.html#config">配置</a>
+      <a href="index.html#panel">Web 面板</a>
+      <a href="index.html#faq">常见问题</a>
+      <div class="doc-side__group">深入</div>
+      <a href="plugins.html">插件开发</a>
+      <a href="architecture.html">架构说明</a>
+    </nav>
+  </aside>
+
+  <main class="doc-main">
+    <p class="doc-kicker">文档 / 开始</p>
+    <h1>把它跑起来</h1>
+    <p class="doc-lede">
+      目标很简单：让一个没写过 QQ 机器人的人，半小时内看到群里有人 @ 它、它回话。
+      下面三步就是全部。
+    </p>
+
+    <section id="install">
+      <h2>安装与运行</h2>
+      <p>环境要求：Python 3.11 及以上。需要 Node.js 18+ 的只有 Web 面板，机器人不需要。</p>
+
+      <pre class="code"><code>git clone https://github.com/qqmin52/qmin.git
+cd qmin
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -e .
+qmin init
+qmin doctor
+qmin start</code></pre>
+
+      <p><code>qmin init</code> 会依次询问 AppID、AppSecret、监听地址、端口、日志级别、SQLite 路径，并自动生成管理令牌写入 <code>.env</code>。</p>
+
+      <div class="note">
+        <strong>不需要构建前端也能跑机器人。</strong>
+        <code>qmin start</code> 照常连接与收发消息；只是打开面板地址会返回一段 JSON 提示，告诉你构建命令。
+      </div>
+
+      <p>获取 AppID / AppSecret：<a href="https://q.qq.com" target="_blank" rel="noopener">q.qq.com</a> → 你的机器人 → 开发设置。机器人还需要在「沙箱配置」里加入测试群，群里必须 @ 它。</p>
+    </section>
+
+    <section id="run">
+      <h2>第一次运行</h2>
+      <p><code>qmin doctor</code> 是只读检查：不写文件、不发网络请求。全部通过时退出码 0：</p>
+      <pre class="code"><code>OK  .env 存在：.env
+OK  app_id 已填写
+OK  app_secret 已填写
+OK  admin_token 已设置
+OK  插件目录：plugins
+OK  插件文件数量：1</code></pre>
+
+      <p>配置缺失时退出码为 1，并列出缺什么、去哪儿填：</p>
+      <pre class="code"><code>缺少必要的 QQ 机器人配置，请检查项目根目录的 .env 文件：
+  1. app_id（.env 变量名 APP_ID）：QQ 开放平台 → 机器人 → 开发设置 → AppID
+  2. app_secret（.env 变量名 APP_SECRET）：同一页面的 AppSecret
+  3. admin_token（.env 变量名 ADMIN_TOKEN）：执行 `qmin init` 可自动生成</code></pre>
+
+      <p><code>qmin start</code> 一条命令启动：配置完整就自动连机器人；配置缺失就进入配置向导模式（面板未构建时用 <code>qmin init</code> 补配置）。</p>
+    </section>
+
+    <section id="cli">
+      <h2>命令</h2>
+      <table class="doc-table">
+        <thead><tr><th>命令</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>qmin init</code></td><td>交互式生成 <code>.env</code>，并自动创建管理令牌。</td></tr>
+          <tr><td><code>qmin doctor</code></td><td>只读检查配置与插件目录，不写文件、不发网络请求。</td></tr>
+          <tr><td><code>qmin start</code></td><td>一条命令启动：有配置自动连机器人，没配置进入配置向导。</td></tr>
+          <tr><td><code>qmin token</code></td><td>复制管理令牌到剪贴板；加 <code>--show</code> 直接打印明文。</td></tr>
+        </tbody>
+      </table>
+      <p>旧版的 <code>qmin run</code> / <code>qmin api</code> 已合并为 <code>qmin start</code>，旧命令会报 No such command。</p>
+    </section>
+
+    <section id="config">
+      <h2>配置</h2>
+      <p>所有配置都在项目根目录的 <code>.env</code>。同名进程环境变量会覆盖文件里的值。</p>
+      <table class="doc-table">
+        <thead><tr><th>键</th><th>含义</th><th>默认</th></tr></thead>
+        <tbody>
+          <tr><td><code>APP_ID</code></td><td>QQ 开放平台机器人 AppID</td><td>必填</td></tr>
+          <tr><td><code>APP_SECRET</code></td><td>QQ 开放平台机器人 AppSecret</td><td>必填</td></tr>
+          <tr><td><code>ADMIN_TOKEN</code></td><td>管理面板与写接口令牌</td><td>自动生成</td></tr>
+          <tr><td><code>HOST</code></td><td>管理接口监听地址</td><td><code>127.0.0.1</code></td></tr>
+          <tr><td><code>PORT</code></td><td>管理接口端口</td><td><code>8000</code></td></tr>
+          <tr><td><code>LOG_LEVEL</code></td><td>DEBUG / INFO / WARNING / ERROR</td><td><code>INFO</code></td></tr>
+          <tr><td><code>DB_PATH</code></td><td>SQLite 文件路径（日志持久化）</td><td><code>qmin.db</code></td></tr>
+          <tr><td><code>LOG_MAX_ROWS</code></td><td>日志表最多保留行数</td><td><code>50000</code></td></tr>
+          <tr><td><code>LOG_SDK</code></td><td>SDK 日志导流：<code>off</code> 只导 WARNING+，<code>all</code> 连 INFO</td><td><code>off</code></td></tr>
+          <tr><td><code>LOG_MESSAGE_CONTENT</code></td><td>入站日志是否记录消息正文</td><td><code>true</code></td></tr>
+        </tbody>
+      </table>
+      <div class="note">不要在面板「设置」里改 <code>HOST</code> / <code>PORT</code> 后指望立刻生效——监听地址变了要重启进程；改凭证则点启动即生效。</div>
+    </section>
+
+    <section id="panel">
+      <h2>Web 面板（可选）</h2>
+      <p>想要可视化界面，构建一次前端即可。产物写入 <code>api/static/</code>，由同一个服务托管：</p>
+      <pre class="code"><code>cd webui
+npm install
+npm run build
+cd ..
+qmin start</code></pre>
+      <p>打开 <code>http://127.0.0.1:8000</code>，用 <code>qmin token</code> 复制的令牌登录。</p>
+      <div class="note">
+        <strong>Windows 用户：</strong>npm 命令请写成 <code>npm.cmd</code>（<code>npm.cmd install</code>、<code>npm.cmd run build</code>），否则 PowerShell 可能因执行策略拒绝运行 <code>npm.ps1</code>。
+      </div>
+      <p>面板包含：仪表盘（连接状态、运行时长、插件数、日志数）、日志（SQLite 落库、级别/来源/关键词筛选、加载更早）、插件（安装 / 启用 / 重新加载 / 删除）、设置（凭证与网络配置）。</p>
+      <div class="note">管理接口默认只绑 <code>127.0.0.1</code>，写操作要求管理令牌与同源 Origin。面板是单机工具，不是公网后台。</div>
+    </section>
+
+    <section id="faq">
+      <h2>常见问题</h2>
+      <h3>收不到群消息？</h3>
+      <p>群里必须 @ 机器人，普通聊天不会触发；机器人需要被拉进群，且该群在开放平台「沙箱配置」里。被动回复需在收到消息后 5 分钟内完成。</p>
+
+      <h3>面板打开是一段 JSON？</h3>
+      <p>前端没构建。<code>qmin start</code> 启动时也会提示构建命令；执行一遍 <code>npm run build</code> 后重启即可。</p>
+
+      <h3>插件没生效？</h3>
+      <p>面板安装 / 重新加载是即时的；直接放进 <code>plugins/</code> 的文件需要重启。仍不生效就看面板「日志」页的加载错误，或 <code>qmin doctor</code> 的插件数量。</p>
+
+      <h3>能同时跑多个机器人吗？</h3>
+      <p>一个 <code>qmin start</code> 管理一个 AppID。多个就多开实例，用不同的 <code>.env</code> 与端口。</p>
+    </section>
+
+    <div class="doc-cards">
+      <a href="plugins.html"><span>插件开发</span><em>装饰器、event 字段、热重载边界</em></a>
+      <a href="architecture.html"><span>架构说明</span><em>数据流与各模块职责</em></a>
+    </div>
+
+    <nav class="doc-pager">
+      <a href="../index.html">← 返回首页</a>
+      <a class="next" href="plugins.html">插件开发 →</a>
+    </nav>
+  </main>
+</div>
+
+<footer class="doc-foot">
+  <span>Qmin 不是腾讯官方产品，仅使用 QQ 开放平台官方 Bot API。MIT License</span>
+  <span><a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">仓库</a> · <a href="https://github.com/qqmin52/qmin/issues" target="_blank" rel="noopener">反馈</a></span>
+</footer>
+
+</body>
+</html>

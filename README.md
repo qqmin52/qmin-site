@@ -7,7 +7,11 @@ Qmin（简Q）的官网，纯静态：一个 `index.html` + 一份 CSS + 一个�
 ```
 index.html            首页（单页）
 404.html              自定义 404
-assets/style.css      全部样式（含暗色模式）
+docs/index.html       文档：安装 / 命令 / 配置 / 面板 / FAQ
+docs/plugins.html     文档：插件开发
+docs/architecture.html 文档：架构说明
+assets/style.css      全站样式（含暗色模式）
+assets/docs.css       文档版式（侧栏 + 正文排版）
 assets/main.js        复制、进场动画、导航高亮
 assets/favicon.svg    图标
 robots.txt

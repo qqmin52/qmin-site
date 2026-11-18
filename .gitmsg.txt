@@ -1,0 +1,8 @@
+﻿feat: 站点内文档（安装 / 插件 / 架构）
+
+- docs/index.html：安装与运行、doctor 示例、命令表、配置表、面板、FAQ
+- docs/plugins.html：装饰器、event 字段、生命周期与热重载、错误处理、未支持能力
+- docs/architecture.html：数据流、模块职责、分层规则、关键约定、扩展点
+- assets/docs.css：文档版式（侧栏 + 正文 + 表格 + 提示块 + 移动端横排导航）
+- 首页导航与文档区改为站内链接；站点 README 补充 docs 结构
+- 修复移动端正文被长代码撑宽的问题（doc-main 强制 width:100%）

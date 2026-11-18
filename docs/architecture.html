@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>架构说明 — Qmin 文档</title>
+<meta name="description" content="Qmin 架构：消息链路、面板链路、各模块输入输出与分层规则。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/docs.css">
+</head>
+<body>
+
+<header class="doc-top">
+  <a class="brand" href="../index.html"><span class="brand__name">Qmin</span><span class="brand__cn">简Q</span></a>
+  <nav class="doc-top__nav" aria-label="文档导航">
+    <a href="index.html">文档</a>
+    <a href="plugins.html">插件</a>
+    <a class="on" href="architecture.html">架构</a>
+    <a href="../index.html">首页</a>
+    <a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<div class="doc-wrap">
+  <aside class="doc-side" aria-label="文档目录">
+    <p class="doc-side__label">文档</p>
+    <nav>
+      <div class="doc-side__group">开始</div>
+      <a href="index.html">安装与运行</a>
+      <a href="index.html#cli">命令</a>
+      <a href="index.html#config">配置</a>
+      <div class="doc-side__group">插件</div>
+      <a href="plugins.html">插件开发</a>
+      <div class="doc-side__group">架构</div>
+      <a class="is-current" href="architecture.html#flow">数据流</a>
+      <a href="architecture.html#modules">模块职责</a>
+      <a href="architecture.html#layers">分层规则</a>
+      <a href="architecture.html#rules">关键约定</a>
+      <a href="architecture.html#extend">扩展点</a>
+    </nav>
+  </aside>
+
+  <main class="doc-main">
+    <p class="doc-kicker">文档 / 架构</p>
+    <h1>东西都在哪</h1>
+    <p class="doc-lede">
+      三层：core（内核）→ api（管理接口）→ webui（静态面板），依赖只能自上往下。
+      机器人链路和面板链路共用同一份运行时状态。
+    </p>
+
+    <section id="flow">
+      <h2>数据流</h2>
+      <pre class="code"><code>消息入站
+  QQ 开放平台
+      │  WebSocket 网关
+      ▼
+  qq-botpy SDK ──► core/bot.py ──► core/events.py ──► core/handlers.py ──► plugins/*.py
+                       ▲                                    │
+                       └────────── event.reply() ◄──────────┘
+                                                   │
+消息出站                                            └──► core/bot.py ──► SDK ──► QQ
+
+状态与日志
+  core/bot.py / api/* ──► core/state.py（内存环形缓冲 + sink）
+                              │
+                              ▼
+                        core/logstore.py（SQLite）
+
+面板
+  webui ──► /api/*（FastAPI）──► core/state.py / core/logstore.py
+                              └──► api/bot_manager.py ──► core/bot.py（启停）</code></pre>
+      <p>一句话：botpy 把 QQ 事件交给 <code>core/bot.py</code>，转成语义事件后由 <code>core/handlers.py</code> 分发给插件；所有日志经 <code>core/state.py</code> 的 sink 落到 SQLite，面板通过 FastAPI 读状态、读日志、启停机器人。</p>
+    </section>
+
+    <section id="modules">
+      <h2>模块职责</h2>
+      <table class="doc-table">
+        <thead><tr><th>模块</th><th>输入</th><th>输出</th><th>不做什么</th></tr></thead>
+        <tbody>
+          <tr><td><code>core/bot.py</code></td><td>AppID / AppSecret、运行时状态</td><td>网关连接；把 SDK 回调转成事件；连接状态与入站日志</td><td>不处理 HTTP、不读写数据库、不做关键字匹配</td></tr>
+          <tr><td><code>core/events.py</code></td><td>SDK 入站消息、回复闭包</td><td><code>GroupAtMessage</code> 或 <code>None</code></td><td>不拼 msg_id / msg_seq，不直接发送</td></tr>
+          <tr><td><code>core/handlers.py</code></td><td>装饰器注册、事件对象</td><td>按关键字分发；异常写 ERROR 日志</td><td>不解析消息、不认识插件文件</td></tr>
+          <tr><td><code>core/plugins.py</code></td><td>插件目录、安装请求</td><td>插件记录；安装 / 重载 / 删除</td><td>不做消息分发、不碰 HTTP 路由</td></tr>
+          <tr><td><code>core/state.py</code></td><td>各模块写入的状态与日志</td><td>连接状态、插件列表、日志环形缓冲、监听者快照</td><td>不持久化（交给 sink）、不做鉴权</td></tr>
+          <tr><td><code>core/logstore.py</code></td><td>日志条目、SDK 日志队列</td><td>SQLite 中的可查询日志（分页 / 筛选 / 保留策略）</td><td>不产出 HTTP 响应、不格式化前端</td></tr>
+          <tr><td><code>core/config.py</code></td><td><code>.env</code>、进程环境变量</td><td>校验过的 Settings、令牌生成</td><td>不发网络请求、不读运行时状态</td></tr>
+          <tr><td><code>core/cli.py</code></td><td>命令行参数</td><td><code>init</code> / <code>doctor</code> / <code>start</code> / <code>token</code></td><td>不实现业务逻辑，只做编排</td></tr>
+          <tr><td><code>api/main.py</code></td><td>Settings、插件目录、BotManager、LogStore</td><td>FastAPI 实例；lifespan 接日志 sink、按需自动连机器人</td><td>不直接调用 botpy</td></tr>
+          <tr><td><code>api/deps.py</code></td><td>请求头</td><td>令牌 / Content-Type / Origin 校验</td><td>不读业务数据</td></tr>
+          <tr><td><code>api/routes/*</code></td><td>HTTP 请求</td><td>JSON：状态、日志、插件、配置、启停</td><td>不含机器人连接逻辑</td></tr>
+          <tr><td><code>webui/</code></td><td>用户操作</td><td>静态资源；数据全部走 <code>/api/*</code></td><td>不内嵌业务规则，不直连 QQ</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="layers">
+      <h2>分层规则</h2>
+      <ol>
+        <li><strong>core 不 import api</strong>，也不依赖 FastAPI。</li>
+        <li><strong>api 不直接操作 botpy</strong>：启停统一走 <code>api/bot_manager.py</code> → <code>core/bot.py</code>。</li>
+        <li><strong>webui 只通过 <code>/api/*</code> 与后端通信</strong>，不假设本地文件结构。</li>
+        <li>事件模型（<code>core/events.py</code>）不依赖 botpy；SDK 类型只出现在 <code>core/bot.py</code> 边界。</li>
+      </ol>
+    </section>
+
+    <section id="rules">
+      <h2>几个关键约定</h2>
+
+      <h3>处理器异常隔离</h3>
+      <p><code>Router.dispatch()</code> 逐个执行命中的处理器，单个处理器抛异常会被捕获并写一条 <code>ERROR</code>（来源 <code>handler</code>），后续处理器继续执行——插件写错不会拖垮机器人。</p>
+
+      <h3>凭证运行时读取</h3>
+      <p><code>BotManager</code> 不缓存 AppID / AppSecret，每次 <code>start()</code> 都重新读 <code>.env</code>。所以面板里改完凭证，点「启动机器人」即生效，不需要重启进程。</p>
+
+      <h3>日志单一入口</h3>
+      <p>所有日志都走 <code>RuntimeState.add_log()</code>：同时写内存环形缓冲（面板实时轮询）与 sink（<code>LogStore.enqueue</code> → SQLite）。落库失败只降级到内存模式，不影响机器人。</p>
+
+      <h3>热重载只针对插件</h3>
+      <p>面板的安装 / 重新加载 / 启用会按来源摘除旧处理器再重新导入；<code>core/</code>、<code>api/</code> 的改动必须重启进程。</p>
+
+      <h3>管理接口默认只绑本机</h3>
+      <p><code>HOST</code> 默认 <code>127.0.0.1</code>；写操作要求 <code>X-Admin-Token</code>、JSON Content-Type 与同源 Origin。</p>
+    </section>
+
+    <section id="extend">
+      <h2>扩展点</h2>
+      <table class="doc-table">
+        <thead><tr><th>想加什么</th><th>改哪里</th></tr></thead>
+        <tbody>
+          <tr><td>新事件装饰器（私聊、频道）</td><td><code>core/events.py</code> 加模型 → <code>core/handlers.py</code> 加装饰器与分发 → <code>core/bot.py</code> 接 SDK 回调 → 测试与本文档</td></tr>
+          <tr><td>新的管理接口</td><td><code>api/routes/</code> 新建路由 → <code>api/schema.py</code> 加模型 → <code>api/main.py</code> 挂载</td></tr>
+          <tr><td>新的 CLI 命令</td><td><code>core/cli.py</code> 加 <code>@app.command()</code> → 测试 → 文档命令表</td></tr>
+          <tr><td>新的持久化数据</td><td><code>core/logstore.py</code> 同层新建 store，或在其中加表（保持异步、失败降级）</td></tr>
+        </tbody>
+      </table>
+      <div class="note">改动前建议先看仓库里的 <a href="https://github.com/qqmin52/qmin/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a>，里面写了必须补的测试与手动验证要求。</div>
+    </section>
+
+    <nav class="doc-pager">
+      <a href="plugins.html">← 插件开发</a>
+      <a class="next" href="index.html">回到文档首页 →</a>
+    </nav>
+  </main>
+</div>
+
+<footer class="doc-foot">
+  <span>Qmin 不是腾讯官方产品，仅使用 QQ 开放平台官方 Bot API。MIT License</span>
+  <span><a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">仓库</a> · <a href="https://github.com/qqmin52/qmin/issues" target="_blank" rel="noopener">反馈</a></span>
+</footer>
+
+</body>
+</html>

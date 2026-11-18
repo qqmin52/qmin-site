@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>插件开发 — Qmin 文档</title>
+<meta name="description" content="Qmin 插件开发：装饰器、event 字段、生命周期与热重载边界、错误处理。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/docs.css">
+</head>
+<body>
+
+<header class="doc-top">
+  <a class="brand" href="../index.html"><span class="brand__name">Qmin</span><span class="brand__cn">简Q</span></a>
+  <nav class="doc-top__nav" aria-label="文档导航">
+    <a href="index.html">文档</a>
+    <a class="on" href="plugins.html">插件</a>
+    <a href="architecture.html">架构</a>
+    <a href="../index.html">首页</a>
+    <a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<div class="doc-wrap">
+  <aside class="doc-side" aria-label="文档目录">
+    <p class="doc-side__label">文档</p>
+    <nav>
+      <div class="doc-side__group">开始</div>
+      <a href="index.html">安装与运行</a>
+      <a href="index.html#cli">命令</a>
+      <a href="index.html#config">配置</a>
+      <a href="index.html#panel">Web 面板</a>
+      <div class="doc-side__group">插件</div>
+      <a class="is-current" href="plugins.html#what">插件是什么</a>
+      <a href="plugins.html#minimal">最小插件</a>
+      <a href="plugins.html#decorator">装饰器</a>
+      <a href="plugins.html#event">event 对象</a>
+      <a href="plugins.html#lifecycle">生命周期</a>
+      <a href="plugins.html#errors">错误处理</a>
+      <a href="plugins.html#limits">尚未支持</a>
+      <div class="doc-side__group">深入</div>
+      <a href="architecture.html">架构说明</a>
+    </nav>
+  </aside>
+
+  <main class="doc-main">
+    <p class="doc-kicker">文档 / 插件</p>
+    <h1>写一个插件</h1>
+    <p class="doc-lede">
+      插件就是 <code>plugins/</code> 目录下的一个 <code>.py</code> 文件。文件名即插件名，
+      里面用装饰器注册处理器，收到匹配的消息就执行。
+    </p>
+
+    <section id="what">
+      <h2>插件是什么</h2>
+      <p>加载时框架会按路径导入文件，模块名固定为 <code>qmin_plugin_&lt;文件名&gt;</code>，并把装饰器注册的处理器挂到全局路由器上，打上来源标记（插件名）。导入失败只影响该插件：错误写进插件记录与日志，其他插件和机器人本体不受影响。</p>
+      <table class="doc-table">
+        <thead><tr><th>规则</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>小写字母、数字、下划线，字母开头</td><td>例如 <code>weather</code>、<code>group_admin</code>、<code>hello2</code></td></tr>
+          <tr><td>不能以下划线开头</td><td>以 <code>_</code> 开头的文件会被跳过，用来放模板（如 <code>_template.py</code>）</td></tr>
+          <tr><td>单文件 ≤ 256 KB</td><td>面板安装时的限制</td></tr>
+          <tr><td>不能重名</td><td>安装同名文件会被拒绝，除非选择覆盖</td></tr>
+        </tbody>
+      </table>
+      <div class="note">三种安装方式：面板「安装插件」粘贴代码/选文件（立即生效）、面板「重新加载」（改完点一下）、直接放进 <code>plugins/</code>（需要重启）。</div>
+    </section>
+
+    <section id="minimal">
+      <h2>最小插件</h2>
+      <pre class="code"><code>"""群里 @ 机器人并说“你好”时回复。"""
+
+from core.handlers import on_group_at
+
+__plugin_name__ = "打招呼"
+__description__ = "收到包含“你好”的群消息时回复"
+__version__ = "1.0.0"
+
+
+@on_group_at("你好")
+async def hello(event) -&gt; None:
+    await event.reply("你好呀")</code></pre>
+      <p><code>__plugin_name__</code> 等元信息可选：面板会展示名字、描述、版本，不写也能正常加载。</p>
+    </section>
+
+    <section id="decorator">
+      <h2>装饰器</h2>
+      <p>目前只有一个事件装饰器：</p>
+      <table class="doc-table">
+        <thead><tr><th>装饰器</th><th>参数</th><th>匹配规则</th></tr></thead>
+        <tbody>
+          <tr><td><code>on_group_at(keyword=None)</code></td><td>字符串或 <code>None</code></td><td><code>None</code> 匹配所有群 @ 消息；否则按子串匹配正文</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><strong>子串匹配、区分大小写</strong>：写「你好」会命中「你好啊」「我说你好」。想精确匹配就在处理器里自己判断 <code>event.content.strip() == "你好"</code>。</li>
+        <li><strong>按注册顺序执行，不会短路</strong>：一条消息命中多个处理器时依次全部执行。</li>
+        <li><strong>多个插件同时命中会各自回复</strong>：两个插件都监听「你好」，群里会收到两条。设计关键字时尽量错开。</li>
+        <li>框架不对正文做 trim，正文可能带前导空格；子串匹配不受影响，精确比较请自己 <code>strip()</code>。</li>
+      </ul>
+    </section>
+
+    <section id="event">
+      <h2>event 对象</h2>
+      <p>处理器收到的是 <code>GroupAtMessage</code>（只读数据类）：</p>
+      <table class="doc-table">
+        <thead><tr><th>字段 / 方法</th><th>类型</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>event.group_openid</code></td><td>str</td><td>群 openid（不是群号）</td></tr>
+          <tr><td><code>event.content</code></td><td>str</td><td>消息正文（平台原文，可能带前导空格）</td></tr>
+          <tr><td><code>event.sender_id</code></td><td>str</td><td>发送者 openid</td></tr>
+          <tr><td><code>event.sender_name</code></td><td>str</td><td>发送者昵称，可能为空字符串</td></tr>
+          <tr><td><code>event.msg_id</code></td><td>str</td><td>本条消息 id</td></tr>
+          <tr><td><code>event.timestamp</code></td><td>str | None</td><td>平台给的时间字符串</td></tr>
+          <tr><td><code>event.raw</code></td><td>Mapping</td><td>原始载荷副本，字段随平台变化，不建议依赖</td></tr>
+          <tr><td><code>await event.reply(text)</code></td><td>Any</td><td>发送被动回复（纯文本），失败会抛异常</td></tr>
+        </tbody>
+      </table>
+      <pre class="code"><code>@on_group_at("hi")
+async def hi(event) -&gt; None:
+    who = event.sender_name or event.sender_id[:8]
+    await event.reply(f"hi，{who}")</code></pre>
+    </section>
+
+    <section id="lifecycle">
+      <h2>生命周期与热重载</h2>
+      <table class="doc-table">
+        <thead><tr><th>场景</th><th>行为</th></tr></thead>
+        <tbody>
+          <tr><td><code>qmin start</code> 启动</td><td>扫描 <code>plugins/*.py</code>，逐个加载</td></tr>
+          <tr><td>面板「安装插件」</td><td>写文件 → 立即加载（失败回滚文件）</td></tr>
+          <tr><td>面板「重新加载」</td><td>先摘掉该插件的旧处理器，再重新导入</td></tr>
+          <tr><td>面板「禁用」</td><td>摘掉处理器，文件保留</td></tr>
+          <tr><td>面板「启用」</td><td>重新导入文件</td></tr>
+          <tr><td>面板「删除」</td><td>摘处理器 + 删文件 + 从列表移除</td></tr>
+          <tr><td>手动放文件</td><td><strong>不生效，需要重启</strong>（没有文件监听）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>边界</h3>
+      <ul>
+        <li><strong>模块级变量会重置</strong>：重新加载会重新执行整个模块，顶层的计数器、缓存归零。</li>
+        <li><strong>不会重启机器人连接</strong>：重载只影响后续消息分发，网关连接保持不变。</li>
+        <li><strong>正在执行的处理器不会被打断</strong>：重载对已经进入执行的那次调用没有影响。</li>
+        <li><strong>不能靠重载改框架</strong>：<code>core/</code>、<code>api/</code> 的改动必须重启进程。</li>
+        <li><strong>处理器不会翻倍</strong>：重载前按来源摘除旧处理器；如果发现重复回复，多半是两个插件监听了同一个关键字。</li>
+      </ul>
+    </section>
+
+    <section id="errors">
+      <h2>错误处理</h2>
+      <p>框架会给每个处理器兜底：抛出的异常会被捕获，写一条 <code>ERROR</code> 日志（来源 <code>handler</code>），然后继续执行后续处理器，不影响主进程。</p>
+      <p>对用户侧的失败，最好自己处理，给出可读的回复或日志：</p>
+      <pre class="code"><code>import asyncio
+
+from core.handlers import on_group_at
+
+
+@on_group_at("查天气")
+async def weather(event) -&gt; None:
+    try:
+        data = await fetch_weather(event.content)
+    except asyncio.TimeoutError:
+        await event.reply("查询超时了，稍后再试")
+        return
+    except Exception:
+        await event.reply("查询失败了，请联系管理员")
+        raise
+
+    await event.reply(data)</code></pre>
+      <ul>
+        <li><strong>不要在处理器里做同步阻塞操作</strong>（<code>time.sleep</code>、<code>requests</code>、大文件读写）——事件循环会被卡住，其他消息全部排队。用 <code>asyncio.sleep</code> 与异步 HTTP 客户端。</li>
+        <li><code>event.reply()</code> 是网络调用，可能因限流或超时失败，建议包在 <code>try/except</code> 里。</li>
+        <li>被动回复有时效（平台限制为收到消息后 5 分钟内），耗时任务请先回复再异步处理。</li>
+      </ul>
+
+      <h3>调试位置</h3>
+      <table class="doc-table">
+        <thead><tr><th>现象</th><th>看哪里</th></tr></thead>
+        <tbody>
+          <tr><td>插件没加载</td><td><code>qmin doctor</code> 的插件数量；面板插件页状态是否「启用·加载失败」</td></tr>
+          <tr><td>加载报错</td><td>面板日志筛选来源 <code>plugins</code>，错误带行号</td></tr>
+          <tr><td>运行时报错</td><td>面板日志筛选来源 <code>handler</code></td></tr>
+          <tr><td>想看 SDK 细节</td><td><code>.env</code> 设 <code>LOG_SDK=all</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="limits">
+      <h2>插件之间，以及尚未支持</h2>
+      <p><strong>插件之间不能互相调用。</strong>每个插件是独立文件、独立模块，<code>plugins/</code> 不在 <code>sys.path</code> 里。需要复用就做成独立 Python 包，或者保持单文件内聚；不要把共享状态放在模块级全局变量里——重载会丢。</p>
+      <p>以下能力需要直接调用 qq-botpy SDK，框架层暂未提供装饰器：</p>
+      <ul>
+        <li>按钮 / 卡片等交互组件（keyboard、ark）</li>
+        <li>私聊（C2C）消息、频道消息</li>
+        <li>主动推送（非被动回复）</li>
+        <li>群成员变动、入群退群事件的业务处理（框架只记日志，不分发给插件）</li>
+      </ul>
+      <div class="note">有需要的场景，欢迎在 <a href="https://github.com/qqmin52/qmin/issues" target="_blank" rel="noopener">issues</a> 里描述用途，会按需求排期。</div>
+    </section>
+
+    <nav class="doc-pager">
+      <a href="index.html">← 安装与运行</a>
+      <a class="next" href="architecture.html">架构说明 →</a>
+    </nav>
+  </main>
+</div>
+
+<footer class="doc-foot">
+  <span>Qmin 不是腾讯官方产品，仅使用 QQ 开放平台官方 Bot API。MIT License</span>
+  <span><a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">仓库</a> · <a href="https://github.com/qqmin52/qmin/issues" target="_blank" rel="noopener">反馈</a></span>
+</footer>
+
+</body>
+</html>
