@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qmin 简Q — 半小时跑通 QQ 官方机器人</title>
+<meta name="description" content="Qmin（简Q）是极简的 QQ 官方机器人框架：只调官方 Bot API，一条命令启动，一个装饰器写插件，自带可选 Web 面板。">
+<meta name="theme-color" content="#F4F1E9">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Qmin 简Q — 半小时跑通 QQ 官方机器人">
+<meta property="og:description" content="只调官方 Bot API，一条命令启动，一个装饰器写插件，自带可选 Web 面板。">
+<meta name="twitter:card" content="summary">
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<div class="rail" aria-hidden="true">
+  <span class="rail__mark">QMIN</span>
+  <span class="rail__rule"></span>
+  <span class="rail__cn">简 Q</span>
+  <span class="rail__ver">v0.1.0</span>
+</div>
+
+<header class="top">
+  <a class="brand" href="#top">
+    <span class="brand__name">Qmin</span>
+    <span class="brand__cn">简Q</span>
+  </a>
+  <nav class="nav" aria-label="主导航">
+    <a href="#why">为什么</a>
+    <a href="#plugin">插件</a>
+    <a href="#start">快速开始</a>
+    <a href="#panel">面板</a>
+    <a href="#docs">文档</a>
+    <a class="nav__gh" href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ────────────────────────────── HERO ────────────────────────────── -->
+  <section class="hero" id="top">
+    <div class="hero__text">
+      <p class="eyebrow"><span class="dot" aria-hidden="true"></span>QQ 开放平台官方 Bot API · 不碰协议逆向</p>
+      <h1>半小时，<br>让机器人<br><em>开口说话</em>。</h1>
+      <p class="lede">
+        Qmin（简 Q）是一个极简的 QQ 官方机器人框架。<br>
+        一条命令启动，一个装饰器写插件，面板想看再看。<br>
+        不构建前端也能先把机器人跑起来。
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#start">开始使用</a>
+        <a class="btn" href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">看源码 ↗</a>
+      </div>
+      <p class="meta mono">python 3.11+ · mit · v0.1.0 · 单文件插件</p>
+    </div>
+
+    <div class="hero__aside">
+      <aside class="card" aria-label="安装命令">
+      <div class="card__head">
+        <span class="mono">安装 / install</span>
+        <button class="copy" type="button" data-copy-target="install">复制</button>
+      </div>
+      <pre class="code code--sm" id="install"><code>git clone https://github.com/qqmin52/qmin.git
+cd qmin
+python -m venv .venv &amp;&amp; pip install -e .
+qmin init &amp;&amp; qmin start</code></pre>
+      <p class="card__note">不需要 Node，不需要构建。想用面板再 <code>npm run build</code> 一次。</p>
+      </aside>
+      <p class="card__caption mono">↑ v0.1.0 / MIT · 三条命令，从零到回话</p>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <span>官方 API</span><span>零封号</span><span>装饰器插件</span><span>Web 面板</span>
+    <span>SQLite 日志</span><span>热重载</span><span>MIT</span>
+  </div>
+
+  <!-- ────────────────────────────── 01 WHY ────────────────────────────── -->
+  <section class="sec" id="why">
+    <header class="sec__head">
+      <span class="sec__no mono">01</span>
+      <div>
+        <h2>为什么是 Qmin</h2>
+        <p class="sec__sub">不发明新概念，只把新手最容易被卡住的地方拿掉。</p>
+      </div>
+    </header>
+
+    <div class="grid grid--2">
+      <article class="item">
+        <span class="item__no mono">01</span>
+        <h3>官方 API，零封号</h3>
+        <p>只封装 QQ 开放平台官方 Bot API（AppID + AppSecret）。没有协议逆向，不碰账号密码，也没有“模拟登录”这类风险操作。</p>
+        <p class="tag mono">official bot api</p>
+      </article>
+
+      <article class="item">
+        <span class="item__no mono">02</span>
+        <h3>装饰器即插件</h3>
+        <p>一个异步函数 + 一个 <code>@on_group_at</code> 就是插件。面板里粘贴安装即刻生效；改完文件点一下「重新加载」，不用重启。</p>
+        <p class="tag mono">one decorator</p>
+      </article>
+
+      <article class="item">
+        <span class="item__no mono">03</span>
+        <h3>面板是可选件</h3>
+        <p>没有构建前端也能跑机器人。想要可视化时再构建一次：仪表盘、日志、插件安装与开关、配置修改都在同一个页面里。</p>
+        <p class="tag mono">panel optional</p>
+      </article>
+
+      <article class="item">
+        <span class="item__no mono">04</span>
+        <h3>出问题看得见</h3>
+        <p>日志落进 SQLite，重启不丢；按级别、来源、关键词筛选，插件加载失败会带上行号与原因，而不是“没反应”。</p>
+        <p class="tag mono">logs persisted</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────── 02 PLUGIN ────────────────────────────── -->
+  <section class="sec sec--ink" id="plugin">
+    <header class="sec__head">
+      <span class="sec__no mono">02</span>
+      <div>
+        <h2>一个装饰器，<br>就是一个插件</h2>
+        <p class="sec__sub">插件就是 <code>plugins/</code> 下的一个 <code>.py</code> 文件，文件名即插件名。</p>
+      </div>
+    </header>
+
+    <div class="split">
+      <div class="specimen">
+        <div class="specimen__bar">
+          <span class="mono">plugins/hello.py</span>
+          <button class="copy copy--ink" type="button" data-copy-target="plugin">复制</button>
+        </div>
+        <pre class="code code--ink" id="plugin"><code><span class="ln">1</span><span class="cm">"""群里 @ 机器人并说“你好”时回复。"""</span>
+<span class="ln">2</span>
+<span class="ln">3</span><span class="kw">from</span> core.handlers <span class="kw">import</span> on_group_at
+<span class="ln">4</span>
+<span class="ln">5</span><span class="st">__plugin_name__</span> = <span class="st">"打招呼"</span>
+<span class="ln">6</span><span class="st">__description__</span> = <span class="st">"收到包含“你好”的群消息时回复"</span>
+<span class="ln">7</span>
+<span class="ln">8</span><span class="kw">@on_group_at</span>(<span class="st">"你好"</span>)
+<span class="ln">9</span><span class="kw">async def</span> <span class="fn">hello</span>(event) -&gt; <span class="ty">None</span>:
+<span class="ln">10</span>    <span class="kw">await</span> event.reply(<span class="st">"你好呀"</span>)</code></pre>
+      </div>
+
+      <div class="notes">
+        <ol>
+          <li><span class="mono">01</span> 文件名只能是<strong>小写字母、数字、下划线</strong>；以 <code>_</code> 开头的文件会被跳过，用来放模板。</li>
+          <li><span class="mono">02</span> 关键字是<strong>子串匹配</strong>：写「你好」会命中「你好啊」，想要精确匹配就在处理器里自己判断。</li>
+          <li><span class="mono">03</span> 一条消息命中多个处理器时会<strong>依次全部执行</strong>；两个插件监听同一个词，群里会收到两条回复。</li>
+          <li><span class="mono">04</span> <code>event</code> 上能拿到群 openid、正文、发送者、消息 id，以及 <code>await event.reply("文本")</code>。</li>
+        </ol>
+        <a class="textlink" href="https://github.com/qqmin52/qmin/blob/main/docs/PLUGINS.md" target="_blank" rel="noopener">完整插件文档 ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────── 03 START ────────────────────────────── -->
+  <section class="sec" id="start">
+    <header class="sec__head">
+      <span class="sec__no mono">03</span>
+      <div>
+        <h2>三步，真的只要三步</h2>
+        <p class="sec__sub">Python 3.11+。不需要 Node，不需要构建前端。</p>
+      </div>
+    </header>
+
+    <ol class="steps">
+      <li class="step">
+        <div class="step__no mono">01</div>
+        <div class="step__body">
+          <h3>装</h3>
+          <pre class="code" id="cmd1"><code>git clone https://github.com/qqmin52/qmin.git
+cd qmin
+python -m venv .venv</code></pre>
+          <button class="copy copy--plain" type="button" data-copy-target="cmd1">复制</button>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__no mono">02</div>
+        <div class="step__body">
+          <h3>配</h3>
+          <pre class="code" id="cmd2"><code>pip install -e .
+qmin init</code></pre>
+          <p class="step__note">按提示填 AppID / AppSecret，其余直接回车。管理令牌会自动生成，之后用 <code>qmin token</code> 复制。</p>
+          <button class="copy copy--plain" type="button" data-copy-target="cmd2">复制</button>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step__no mono">03</div>
+        <div class="step__body">
+          <h3>跑</h3>
+          <pre class="code" id="cmd3"><code>qmin doctor
+qmin start</code></pre>
+          <p class="step__note">有配置会自动连机器人，没配置会进配置向导。群里 @ 一下，就该回话了。</p>
+          <button class="copy copy--plain" type="button" data-copy-target="cmd3">复制</button>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ────────────────────────────── 04 PANEL ────────────────────────────── -->
+  <section class="sec" id="panel">
+    <header class="sec__head">
+      <span class="sec__no mono">04</span>
+      <div>
+        <h2>面板，想要再要</h2>
+        <p class="sec__sub">构建一次前端，得到一个只监听本机的管理界面。</p>
+      </div>
+    </header>
+
+    <div class="toc">
+      <div class="toc__row"><span class="toc__k">仪表盘</span><span class="toc__dots" aria-hidden="true"></span><span class="toc__v">连接状态 · 运行时长 · 插件数 · 日志数</span></div>
+      <div class="toc__row"><span class="toc__k">日志</span><span class="toc__dots" aria-hidden="true"></span><span class="toc__v">SQLite 落库 · 级别 / 来源 / 关键词筛选 · 加载更早</span></div>
+      <div class="toc__row"><span class="toc__k">插件</span><span class="toc__dots" aria-hidden="true"></span><span class="toc__v">粘贴安装 · 启用停用 · 重新加载 · 删除</span></div>
+      <div class="toc__row"><span class="toc__k">设置</span><span class="toc__dots" aria-hidden="true"></span><span class="toc__v">凭证与网络配置 · 改完点启动即生效</span></div>
+    </div>
+
+    <p class="aside">
+      <span class="mono">note</span>
+      管理接口默认只绑 <code>127.0.0.1</code>，写操作要求管理令牌与同源 Origin。面板是单机工具，不是公网后台。
+    </p>
+  </section>
+
+  <!-- ────────────────────────────── 05 DOCS ────────────────────────────── -->
+  <section class="sec" id="docs">
+    <header class="sec__head">
+      <span class="sec__no mono">05</span>
+      <div>
+        <h2>文档不藏私</h2>
+        <p class="sec__sub">写插件、改框架、提 PR，都有据可查。</p>
+      </div>
+    </header>
+
+    <ul class="links">
+      <li><a href="https://github.com/qqmin52/qmin/blob/main/docs/PLUGINS.md" target="_blank" rel="noopener"><span class="links__t">插件开发指南</span><span class="links__d">装饰器、event 字段、热重载边界、错误处理写法</span><span class="links__a" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://github.com/qqmin52/qmin/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener"><span class="links__t">架构说明</span><span class="links__d">数据流图与每个模块的输入 / 输出 / 不做什么</span><span class="links__a" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://github.com/qqmin52/qmin/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener"><span class="links__t">贡献指南</span><span class="links__d">改哪儿、怎么验证、提交信息怎么写</span><span class="links__a" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener"><span class="links__t">GitHub 仓库</span><span class="links__d">源码、issue、release</span><span class="links__a" aria-hidden="true">↗</span></a></li>
+    </ul>
+  </section>
+
+  <!-- ────────────────────────────── FAQ ────────────────────────────── -->
+  <section class="sec sec--faq" id="faq">
+    <header class="sec__head">
+      <span class="sec__no mono">06</span>
+      <div><h2>几个会被问到的</h2></div>
+    </header>
+
+    <details>
+      <summary>不构建前端，面板是不是就废了？</summary>
+      <p>机器人不受影响：<code>qmin start</code> 照常连接、收发消息。面板地址会返回一段 JSON 提示，告诉你构建命令。配置可以用 <code>qmin init</code> 在命令行里完成。</p>
+    </details>
+    <details>
+      <summary>会不会封号？</summary>
+      <p>Qmin 只调用 QQ 开放平台官方 Bot API，不涉及协议逆向或模拟登录。机器人需要在开放平台创建、审核，并按平台规则使用。</p>
+    </details>
+    <details>
+      <summary>支持按钮、卡片、私聊吗？</summary>
+      <p>目前只封装了群 @ 文本消息。按钮 / 卡片（keyboard、ark）、私聊、频道消息还没有对应装饰器，需要直接调用 qq-botpy SDK。</p>
+    </details>
+    <details>
+      <summary>能同时跑多个机器人吗？</summary>
+      <p>一个 <code>qmin start</code> 管理一个 AppID 的连接。需要多个就起多个实例、用不同的 <code>.env</code> 与端口。</p>
+    </details>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot__main">
+    <div class="foot__brand">
+      <span class="brand__name">Qmin</span>
+      <span class="brand__cn">简Q</span>
+      <p class="foot__tag">极简 QQ 官方机器人框架</p>
+    </div>
+    <nav class="foot__nav" aria-label="页脚导航">
+      <a href="https://github.com/qqmin52/qmin" target="_blank" rel="noopener">仓库</a>
+      <a href="https://github.com/qqmin52/qmin/blob/main/docs/PLUGINS.md" target="_blank" rel="noopener">插件文档</a>
+      <a href="https://github.com/qqmin52/qmin/blob/main/docs/RELEASE_v0.1.0.md" target="_blank" rel="noopener">发布说明</a>
+      <a href="https://github.com/qqmin52/qmin/issues" target="_blank" rel="noopener">反馈</a>
+    </nav>
+  </div>
+  <div class="foot__meta">
+    <p>Qmin 不是腾讯官方产品，仅使用 QQ 开放平台官方 Bot API。MIT License · <span id="year">2026</span></p>
+    <p class="mono">paper #F4F1E9 · ink #191510 · vermilion #C4442A</p>
+  </div>
+</footer>
+
+<script src="assets/main.js"></script>
+</body>
+</html>
