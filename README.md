@@ -14,6 +14,8 @@ assets/style.css      全站样式（含暗色模式）
 assets/docs.css       文档版式（侧栏 + 正文排版）
 assets/main.js        复制、进场动画、导航高亮
 assets/favicon.svg    图标
+assets/qq-group.png   交流群二维码（640×640，从 QQ 群卡片裁出）
+sitemap.xml           站点地图
 robots.txt
 .nojekyll             跳过 Jekyll，原样发布
 ```
@@ -26,6 +28,10 @@ robots.txt
 python -m http.server 8080
 # 打开 http://127.0.0.1:8080
 ```
+
+## 域名
+
+自定义域名已绑定：**<https://yf9d.com>**（`CNAME` 文件在仓库根目录，GitHub Pages 已开启 Enforce HTTPS）。
 
 ## 部署
 
